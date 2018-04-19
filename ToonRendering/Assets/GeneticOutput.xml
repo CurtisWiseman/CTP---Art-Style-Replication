@@ -1,0 +1,21 @@
+<genetic>
+  <IDNumber>0000000000000000134</IDNumber>
+  <shader>
+    <Outline>1</Outline>
+    <Width>0.2</Width>
+    <ColourRed>0.0</ColourRed>
+    <ColourGreen>0.0</ColourGreen>
+    <ColourBlue>0.0</ColourBlue>
+  </shader>
+  <shader>
+    <Cel>1</Cel>
+    <Levels>2.0</Levels>
+  </shader>
+  <shadernotready>
+    <Hatching>0</Hatching>
+    <Intensity>5.0</Intensity>
+    <ColourRed>0.0</ColourRed>
+    <ColourGreen>0.0</ColourGreen>
+    <ColourBlue>0.0</ColourBlue>
+  </shadernotready>
+</genetic>

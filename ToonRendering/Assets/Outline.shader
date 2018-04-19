@@ -1,143 +1,88 @@
-﻿// Upgrade NOTE: replaced 'mul(UNITY_MATRIX_MVP,*)' with 'UnityObjectToClipPos(*)'
-
-Shader "Custom/Post Outline"
+﻿Shader "Outline"
 {
 	Properties
 	{
-		_MainTex("Main Texture",2D) = "black"{}
-		_SceneTex("Scene Texture",2D) = "black"{}
+		_Color("Main Color", Color) = (0.5,0.5,0.5,1)
+		_OutlineColor("Outline Color", Color) = (0,0,0,1)
+		_ColourRed("ColourRed", Range(0.0, 1.0)) = 1.0
+		_ColourGreen("_ColourGreen", Range(0.0, 1.0)) = 0.0
+		_ColourBlue("_ColourBlue", Range(0.0, 1.0)) = 0.0
+		_Width("Width", Range(0.0, 10.0)) = 0.03
+		_MainTex("Base (RGB)", 2D) = "white" { }
 	}
-		SubShader
+
+	CGINCLUDE
+
+	#include "UnityCG.cginc"
+
+	struct appdata
 	{
-		Pass
-		{
-			CGPROGRAM
+		float4 vertex : POSITION;
+		float3 normal : NORMAL;
+	};
 
-			sampler2D _MainTex;
+	struct v2f
+	{
+		float4 pos : POSITION;
+		float4 color : COLOR;
+	};
 
-			//<SamplerName>_TexelSize is a float2 that says how much screen space a texel occupies.
-			float2 _MainTex_TexelSize;
+	uniform float _Width;
+	uniform float _ColourRed;
+	uniform float _ColourGreen;
+	uniform float _ColourBlue;
+	uniform float4 _OutlineColor;
 
-			#pragma vertex vert
-			#pragma fragment frag
-			#include "UnityCG.cginc"
+	v2f vert(appdata v)
+	{
+		// just make a copy of incoming vertex data but scaled according to normal direction
+		v2f o;
+		o.pos = UnityObjectToClipPos(v.vertex);
 
-			struct v2f
-			{
-				float4 pos : SV_POSITION;
-				float2 uvs : TEXCOORD0;
-			};
+		float3 norm = mul((float3x3)UNITY_MATRIX_IT_MV, v.normal);
+		float2 offset = TransformViewToProjection(norm.xy);
 
-			v2f vert(appdata_base v)
-			{
-				v2f o;
-
-				//Despite the fact that we are only drawing a quad to the screen, Unity requires us to multiply vertices by our MVP matrix, presumably to keep things working when inexperienced people try copying code from other shaders.
-				o.pos = UnityObjectToClipPos(v.vertex);
-
-				//Also, we need to fix the UVs to match our screen space coordinates. There is a Unity define for this that should normally be used.
-				o.uvs = o.pos.xy / 2 + 0.5;
-
-				return o;
-			}
-
-
-			half frag(v2f i) : COLOR
-			{
-				//arbitrary number of iterations for now
-				int NumberOfIterations = 20;
-
-				//split texel size into smaller words
-				float TX_x = _MainTex_TexelSize.x;
-
-				//and a final intensity that increments based on surrounding intensities.
-				float ColorIntensityInRadius;
-
-				//for every iteration we need to do horizontally
-				for (int k = 0; k<NumberOfIterations; k += 1)
-				{
-					//increase our output color by the pixels in the area
-					ColorIntensityInRadius += tex2D(_MainTex, i.uvs.xy + float2((k - NumberOfIterations / 2)*TX_x,0)).r / NumberOfIterations;
-				}
-
-				//output some intensity of teal
-				return ColorIntensityInRadius;
-			}
-			ENDCG
-		}
-
-		//end pass    
-
-		GrabPass{}
-
-		Pass
-		{
-			CGPROGRAM
-
-			sampler2D _MainTex;
-			sampler2D _SceneTex;
-
-			//we need to declare a sampler2D by the name of "_GrabTexture" that Unity can write to during GrabPass{}
-			sampler2D _GrabTexture;
-
-			//<SamplerName>_TexelSize is a float2 that says how much screen space a texel occupies.
-			float2 _GrabTexture_TexelSize;
-
-			#pragma vertex vert
-			#pragma fragment frag
-			#include "UnityCG.cginc"
-
-			struct v2f
-			{
-				float4 pos : SV_POSITION;
-				float2 uvs : TEXCOORD0;
-			};
-
-			v2f vert(appdata_base v)
-			{
-				v2f o;
-
-				//Despite the fact that we are only drawing a quad to the screen, Unity requires us to multiply vertices by our MVP matrix, presumably to keep things working when inexperienced people try copying code from other shaders.
-				o.pos = UnityObjectToClipPos(v.vertex);
-
-				//Also, we need to fix the UVs to match our screen space coordinates. There is a Unity define for this that should normally be used.
-				o.uvs = o.pos.xy / 2 + 0.5;
-
-				return o;
-			}
-
-			half4 frag(v2f i) : COLOR
-			{
-				//arbitrary number of iterations for now
-				int NumberOfIterations = 20;
-
-				//split texel size into smaller words
-				float TX_y = _GrabTexture_TexelSize.y;
-
-				//and a final intensity that increments based on surrounding intensities.
-				half ColorIntensityInRadius = 0;
-
-				//if something already exists underneath the fragment (in the original texture), discard the fragment.
-				if (tex2D(_MainTex,i.uvs.xy).r>0)
-				{
-					return tex2D(_SceneTex,float2(i.uvs.x,1 - i.uvs.y));
-				}
-
-				//for every iteration we need to do vertically
-				for (int j = 0; j<NumberOfIterations; j += 1)
-				{
-					//increase our output color by the pixels in the area
-					ColorIntensityInRadius += tex2D(_GrabTexture, float2(i.uvs.x,1 - i.uvs.y) + float2(0,(j - NumberOfIterations / 2)*TX_y)).r / NumberOfIterations;
-				}
-
-				//this is alpha blending, but we can't use HW blending unless we make a third pass, so this is probably cheaper.
-				half4 outcolor = ColorIntensityInRadius * half4(0,1,1,1) * 2 + (1 - ColorIntensityInRadius)*tex2D(_SceneTex,float2(i.uvs.x,1 - i.uvs.y));
-				return outcolor;
-			}
-			ENDCG
-		}
-		//end pass    
+		o.pos.xy += offset * o.pos.z * _Width;
+		o.color = _OutlineColor;
+		return o;
 	}
-	//end subshader
+
+	ENDCG
+
+	SubShader
+	{
+		Tags{ "Queue" = "Transparent"}
+
+		Pass
+		{
+			Name "OUTLINE"
+			Tags{ "LightMode" = "Always" }
+
+			Cull Off
+			ZWrite Off
+			ZTest Always
+			ColorMask RGB
+
+			// you can choose what kind of blending mode you want for the outline
+			Blend SrcAlpha OneMinusSrcAlpha //Blend One OneMinusSrcAlpha	// Normal
+											//Blend One One					// Additive
+											//Blend One OneMinusDstColor	// Soft Additive
+											//Blend DstColor Zero			// Multiplicative
+											//Blend DstColor SrcColor		// 2x Multiplicative
+
+			CGPROGRAM
+
+			#pragma vertex vert
+			#pragma fragment frag
+
+			half4 frag(v2f i) :COLOR
+			{
+				return i.color;
+			}
+
+			ENDCG
+		}
+	}
+
+	Fallback "Diffuse"
 }
-//end shader

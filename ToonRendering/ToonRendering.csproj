@@ -13,11 +13,13 @@
     <TargetFrameworkIdentifier>.NETFramework</TargetFrameworkIdentifier>
     <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
     <TargetFrameworkProfile>Unity Subset v3.5</TargetFrameworkProfile>
-    <CompilerResponseFile></CompilerResponseFile>
+    <CompilerResponseFile>
+    </CompilerResponseFile>
     <UnityProjectType>Game:1</UnityProjectType>
     <UnityBuildTarget>StandaloneWindows:5</UnityBuildTarget>
     <UnityVersion>2017.3.1f1</UnityVersion>
-    <RootNamespace></RootNamespace>
+    <RootNamespace>
+    </RootNamespace>
     <LangVersion>4</LangVersion>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
@@ -282,18 +284,23 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Assets\PostEffect.cs" />
+    <Compile Include="Assets\BrokenShaders\PostEffect.cs" />
+    <Compile Include="Assets\FileMonitorScreenshotter.cs" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="Assets\CelShadingForward.shader" />
-    <None Include="Assets\FXShader.hlsl" />
-    <None Include="Assets\GLSL.glslinc" />
-    <None Include="Assets\HLSL.hlsl" />
-    <None Include="Assets\Otlin.shader" />
+    <None Include="Assets\BrokenShaders\B_Outline.shader" />
+    <None Include="Assets\BrokenShaders\FXShader.hlsl" />
+    <None Include="Assets\BrokenShaders\GLSL.glslinc" />
+    <None Include="Assets\BrokenShaders\HLSL.hlsl" />
+    <None Include="Assets\BrokenShaders\Otlin.shader" />
+    <None Include="Assets\BrokenShaders\Shader machine broke.shader" />
+    <None Include="Assets\BrokenShaders\UberShaderTest.shader" />
+    <None Include="Assets\Cel.shader" />
+    <None Include="Assets\GeneticOutput.xml">
+      <SubType>Designer</SubType>
+    </None>
+    <None Include="Assets\Hatching.shader" />
     <None Include="Assets\Outline.shader" />
-    <None Include="Assets\Shader machine broke.shader" />
-    <None Include="Assets\SilhouettedDiffuse.shader" />
-    <None Include="Assets\UberShaderTest.shader" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Target Name="GenerateTargetFrameworkMonikerAttribute" />

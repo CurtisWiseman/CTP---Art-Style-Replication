@@ -1,8 +1,9 @@
-﻿Shader "Custom/CelShadingForward"
+﻿Shader "Cel"
 {
 	Properties
 	{
 		_Color("Color", Color) = (1, 1, 1, 1)
+		_Levels("Levels", Range(0,255)) = 2
 		_MainTex("Albedo (RGB)", 2D) = "white" {}
 	}
 	
@@ -10,7 +11,7 @@
 	{
 		Tags
 		{
-			"RenderType" = "Opaque"
+			"RenderType" = "Transparent"
 		}
 		LOD 200
 
