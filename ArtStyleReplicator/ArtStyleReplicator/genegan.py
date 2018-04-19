@@ -115,6 +115,14 @@ def generator(z):
 	
 	return g_out
 
+# The data structure used as a z-vector
+geneStruct = {
+	'ambient': 1.0, 
+	'albedo': 1.0, 
+	'specular': 1.0, 
+	'cel': 1.0
+	}
+
 #Genetirator algoritwork
 def genetic(z):
 
@@ -122,31 +130,31 @@ def genetic(z):
 	#do the genetic bit
 
 	# Fitness function (replace with output from discriminator)
-	def fitness (password, test_word):
-		score = 0
-		i = 0
-		while (i < len(password)):
-			if (password[i] == test_word[i]):
-				score+=1
-			i+=1
-		return score * 100 / len(password)
+	#def fitness (password, test_word):
+	#	score = 0
+	#	i = 0
+	#	while (i < len(password)):
+	#		if (password[i] == test_word[i]):
+	#			score+=1
+	#		i+=1
+	#	return score * 100 / len(password)
 
 
 	# Initial population generation
-	def generateAWord (length):
+	def generateAWord():
 		i = 0
-		result = ""
-		while i < length:
-			letter = chr(97 + int(26 * random.random()))
-			result += letter
+		result = geneStruct
+		while i < len(result.keys()):
+			part = random.random()
+			result.keys()[i] = part
 			i +=1
 		return result
 
-	def generateFirstPopulation(sizePopulation, password):
+	def generateFirstPopulation(sizePopulation):
 		population = []
 		i = 0
 		while i < sizePopulation:
-			population.append(generateAWord(len(password)))
+			population.append(generateAWord())
 			i+=1
 		return population
 
@@ -170,12 +178,12 @@ def genetic(z):
 
 	# Breeding
 	def createChild(individual1, individual2):
-		child = ""
-		for i in range(len(individual1)):
+		child = geneStruct
+		for i in range(len(individual1.keys())):
 			if (int(100 * random.random()) < 50):
-				child += individual1[i]
+				child.keys()[i] = individual1.keys()[i]
 			else:
-				child += individual2[i]
+				child.keys()[i] = individual2.keys()[i]
 		return child
 
 	def createChildren(breeders, number_of_child):
@@ -187,13 +195,10 @@ def genetic(z):
 
 
 	# Mutation
-	def mutateWord(word):
-		index_modification = int(random.random() * len(word))
-		if (index_modification == 0):
-			word = chr(97 + int(26 * random.random())) + word[1:]
-		else:
-			word = word[:index_modification] + chr(97 + int(26 * random.random())) + word[index_modification+1:]
-		return word
+	def mutateGenes(individual):
+		index_modification = int(random.random() * len(individual.keys()))
+		individual.keys()[index_modification] = random.random()
+		return individual
 	
 	def mutatePopulation(population, chance_of_mutation):
 		for i in range(len(population)):
