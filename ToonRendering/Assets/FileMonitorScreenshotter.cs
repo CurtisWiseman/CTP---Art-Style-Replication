@@ -14,7 +14,7 @@ public class FileMonitorScreenshotter : MonoBehaviour
     private string filePath = "../UnityScreenshots/";
     [SerializeField] private TextAsset geneticOutput;
     XmlDocument geneticOutputXML = new XmlDocument();
-    private bool inProgress = false;
+    [SerializeField] private static bool inProgress = false;
 
 	// Use this for initialization
 	void Start ()
@@ -39,7 +39,6 @@ public class FileMonitorScreenshotter : MonoBehaviour
             }
             inProgress = false;
         }
-
     }
 
     bool ReadFileInfo()

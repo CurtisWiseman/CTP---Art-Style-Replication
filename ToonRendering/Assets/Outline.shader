@@ -7,7 +7,7 @@ Shader "Outline"
 		_O_ColourRed("ColourRed", Range(0.0, 1.0)) = 1.0
 		_O_ColourGreen("ColourGreen", Range(0.0, 1.0)) = 0.0
 		_O_ColourBlue("ColourBlue", Range(0.0, 1.0)) = 0.0
-		_O_Width("Width", Range(0.0, 10.0)) = 0.03
+		_O_Width("Width", Range(0.0, 1.0)) = 0.03
 		_MainTex("Base (RGB)", 2D) = "white" { }
 	}
 
@@ -42,7 +42,7 @@ Shader "Outline"
 		float3 norm = mul((float3x3)UNITY_MATRIX_IT_MV, v.normal);
 		float2 offset = TransformViewToProjection(norm.xy);
 
-		o.pos.xy += offset * o.pos.z * _O_Width;
+		o.pos.xy += offset * o.pos.z * _O_Width * 0.3;
 		o.color = float4(_O_ColourRed, _O_ColourGreen, _O_ColourBlue, 1);
 
 		return o;

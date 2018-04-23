@@ -26,6 +26,7 @@ train_data = train_datagen.flow_from_directory(
 	batch_size=train_data_batch_size,
 	class_mode=None)
 genimg = "../../UnityScreenshots/"
+XMLPath = "../../ToonRendering/Assets/GeneticOutput.xml"
 Max_ID_Number = -1
 
 # Leaky function to account for slight innacuracies
@@ -105,20 +106,20 @@ def discriminator(bottom, reuse=False):
 # The data structure used as a z-vector
 
 geneStruct = collections.OrderedDict({
-	'_Outline': 1.0,
-	'_O_Width' : 1.0,
-	'_O_ColourRed' : 0.0,
-	'_O_ColourGreen' : 0.0,
-	'_O_ColourBlue' : 0.0,
+	#'_Outline': 1.0,
+	#'_O_Width' : 1.0,
+	#'_O_ColourRed' : 0.0,
+	#'_O_ColourGreen' : 0.0,
+	#'_O_ColourBlue' : 0.0,
 
-	'_Cel' : 1.0,
-	'_C_Levels' : 2.0,
+	#'_Cel' : 1.0,
+	#'_C_Levels' : 2.0,
 
-	'_Hatching' : 1.0,
-	'_H_Intensity' : 1.0,
-	'_H_ColourRed' : 0.0,
-	'_H_ColourGreen' : 0.0,
-	'_H_ColourBlue' : 0.0,
+	#'_Hatching' : 1.0,
+	#'_H_Intensity' : 1.0,
+	#'_H_ColourRed' : 0.0,
+	#'_H_ColourGreen' : 0.0,
+	#'_H_ColourBlue' : 0.0,
 	})
 
 Individual = collections.OrderedDict({
@@ -163,7 +164,16 @@ def genetic(z):
 		Max_ID_Number += 1
 		child['idnumber'] = Max_ID_Number
 
-		for i in range(len(child['gene'].values())):
+		global XMLPath
+		tree = ET.parse(XMLPath)
+		root = tree.getroot()
+
+		for node in root:
+			for subNode in node:
+				child['gene'][subNode.tag] = 0.0
+		print("Read from XML")
+
+		for i in range(len(child['gene'].keys())):
 			if (int(100 * random.random()) < 50):
 				child['gene'][str(list(child['gene'].keys())[i])] = individual1['gene'][str(list(individual1['gene'].keys())[i])]
 			else:
@@ -184,7 +194,7 @@ def genetic(z):
 	# Mutation
 	def mutateGenes(individual):
 		index_modification = int(random.random() * len(individual['gene'].values()))
-		individual['gene'][str(list(individual1['gene'].keys())[index_modification])] = random.random()
+		individual['gene'][str(list(individual['gene'].keys())[index_modification])] = random.random()
 		return individual
 	
 	def mutatePopulation(population, chance_of_mutation):
@@ -199,6 +209,7 @@ def genetic(z):
 		 nextBreeders = selectFromPopulation(populationSorted, best_sample, lucky_few)
 		 nextPopulation = createChildren(nextBreeders, number_of_child)
 		 nextGeneration = mutatePopulation(nextPopulation, chance_of_mutation)
+		 print("Made next generation")
 		 return nextPopulation
 
 	# Evolving through a set number of generations
@@ -216,13 +227,15 @@ def genetic(z):
 		historic = []
 		historic.append(generateZVector(z_size))
 
-		while c_fitness > -10000000.05*z_size:
+		while c_fitness < -10.0*z_size:
 			historic.append(nextGeneration(historic[i], best_sample, lucky_few, number_of_child, chance_of_mutation))
 			this_generation = historic[i]
 			c_fitness = 0.0
 			for j in range (z_size):
 				c_fitness += checkFitness(this_generation[j])
 			i += 1
+			print("Overall fitness: " + c_fitness)
+		print("Multigen from fitness passed: " + c_fitness)
 		return historic
 
 	# Retrieve overall best individual(s)
@@ -282,13 +295,20 @@ def generateZValue():
 
 	i = 0
 	result['gene'] = dict(geneStruct)
+	global XMLPath
+	tree = ET.parse(XMLPath)
+	root = tree.getroot()
+
+	for child in root:
+		for subChild in child:
+			result['gene'][subChild.tag] = 0.0
+	print("Read from XML")
 
 	while i < len(result['gene']):
 		part = random.random()
 		keyname = str(list(result['gene'].keys())[i])
 		result['gene'][keyname] = part
 		i +=1
-
 
 	generateImage(result)
 	checkFitness(result)
@@ -310,11 +330,9 @@ def generateZVector(sizePopulation):
 
 # Saving out to XML and grabbing image back
 def saveToXML(word):
-	XMLPath = "../../ToonRendering/Assets/GeneticOutput.xml"
+	global XMLPath
 	tree = ET.parse(XMLPath)
 	root = tree.getroot()
-
-	print("Read from XML")
 
 	for child in root:
 		if(child.tag == "IDNumber"):
@@ -324,12 +342,17 @@ def saveToXML(word):
 
 	tree.write(XMLPath)
 
+	global genimg
+	tree.write(genimg + str(word['idnumber']) + ".xml")
+
 	print("Saved to XML")
 
 def generateImage(word):
 	saveToXML(word)
 
 	print("Waiting for Unity to generate image...")
+
+	global genimg
 
 	while True:
 		if os.path.isfile(genimg + str(word['idnumber']) + ".png"):
@@ -420,7 +443,7 @@ with tf.Session() as sess:
 	for i in range(iterations):
 		#zs = np.random.uniform(-1.0, 1.0, size=[batch_size, z_size]).astype(np.float32)				# Generate a random z batch
 		zs = generateZVector(z_size)
-		xs , _ = train_data.next													# Draw a sample batch from dataset.
+		xs , _ = train_data.next																		# Draw a sample batch from dataset.
 		xs = (np.reshape(xs, [batch_size, 28, 28, 1]) - 0.5) * 2.0										# Transform it to be between -1 and 1
 		xs = np.lib.pad(xs, ((0, 0), (2, 2), (2, 2), (0, 0)), 'constant', constant_values=(-1, -1))		# Pad the images so they are 32x32
 
