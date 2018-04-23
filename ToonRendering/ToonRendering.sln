@@ -1,6 +1,6 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 2015
+# Visual Studio 2017
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ToonRendering", "ToonRendering.csproj", "{150EDA20-A0A0-50E2-4D05-CDFE8760D2FC}"
 EndProject
 Global

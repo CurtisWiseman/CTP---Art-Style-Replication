@@ -15,6 +15,12 @@ Shader "Hidden/HatchingComposite"
 		// No culling or depth
 		Cull Off ZWrite Off ZTest Always
 
+		Tags
+	{
+		"RenderType" = "Transparent"
+		"Queue" = "AlphaTest+53"
+	}
+
 		Pass
 		{
 			CGPROGRAM

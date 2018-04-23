@@ -2,28 +2,28 @@
 {
 	Properties
 	{
-		_Color("Color", Color) = (1, 1, 1, 0)
 		_C_ColourRed("ColourRed", Range(0,1)) = 1
 		_C_ColourGreen("ColourGreen", Range(0,1)) = 1
 		_C_ColourBlue("ColourBlue", Range(0,1)) = 1
-		_C_Levels("Levels", Range(0,255)) = 2
+		_C_Levels("Levels", Range(0,1)) = 0.5
 		_MainTex("Albedo (RGB)", 2D) = "white" {}
 	}
-	
+
 	SubShader
 	{
 		Tags
 		{
 			"RenderType" = "Transparent"
+			"Queue" = "AlphaTest+52"
 		}
 		LOD 200
 
 		CGPROGRAM
-		
+
 		#pragma surface surf CelShadingForward
 		#pragma target 3.0
 
-		half4 LightingCelShadingForward(SurfaceOutput s, half3 lightDir, half atten)
+		half4 LightingCelShadingForward(SurfaceOutput s, half3 lightDir, half atten) 
 		{
 			half NdotL = dot(s.Normal, lightDir);
 			NdotL = 1 + clamp(floor(NdotL), -1, 0);
@@ -35,7 +35,9 @@
 		}
 
 		sampler2D _MainTex;
-		fixed4 _Color;
+		float _C_ColourRed;
+		float _C_ColourGreen;
+		float _C_ColourBlue;
 
 		struct Input
 		{
@@ -44,12 +46,10 @@
 
 		void surf(Input IN, inout SurfaceOutput o)
 		{
-			// Albedo comes from a texture tinted by color
-			fixed4 c = tex2D(_MainTex, IN.uv_MainTex) * _Color;
+			fixed4 c = tex2D(_MainTex, IN.uv_MainTex) * float4(_C_ColourRed, _C_ColourGreen, _C_ColourBlue, 1);
 			o.Albedo = c.rgb;
 			o.Alpha = c.a;
 		}
-
 		ENDCG
 	}
 	FallBack "Diffuse"

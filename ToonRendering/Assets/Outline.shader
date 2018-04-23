@@ -1,4 +1,4 @@
-﻿Shader "Outline"
+Shader "Outline"
 {
 	Properties
 	{
@@ -11,11 +11,11 @@
 		_MainTex("Base (RGB)", 2D) = "white" { }
 	}
 
-	CGINCLUDE
+		CGINCLUDE
 
-	#include "UnityCG.cginc"
+#include "UnityCG.cginc"
 
-	struct appdata
+		struct appdata
 	{
 		float4 vertex : POSITION;
 		float3 normal : NORMAL;
@@ -50,110 +50,110 @@
 
 	ENDCG
 
-	SubShader
+		SubShader
 	{
-		Tags{ "Queue" = "Transparent"}
+		Tags{ "Queue" = "AlphaTest+51" }
 
 		Pass
-		{
-			Name "OUTLINE"
-			Tags{ "LightMode" = "Always" }
+	{
+		Name "OUTLINE"
+		Tags{ "LightMode" = "Always" }
 
-			Cull Off
-			ZWrite Off
-			ColorMask RGB
+		Cull Off
+		ZWrite Off
+		ColorMask RGB
 
-			// you can choose what kind of blending mode you want for the outline
-			Blend SrcAlpha OneMinusSrcAlpha //Blend One OneMinusSrcAlpha	// Normal
-											//Blend One One					// Additive
-											//Blend One OneMinusDstColor	// Soft Additive
-											//Blend DstColor Zero			// Multiplicative
-											//Blend DstColor SrcColor		// 2x Multiplicative
+		// you can choose what kind of blending mode you want for the outline
+		Blend SrcAlpha OneMinusSrcAlpha //Blend One OneMinusSrcAlpha	// Normal
+										//Blend One One					// Additive
+										//Blend One OneMinusDstColor	// Soft Additive
+										//Blend DstColor Zero			// Multiplicative
+										//Blend DstColor SrcColor		// 2x Multiplicative
 
-			CGPROGRAM
+		CGPROGRAM
 
-			#pragma vertex vert
-			#pragma fragment frag
+#pragma vertex vert
+#pragma fragment frag
 
-			half4 frag(v2f i) :COLOR
-			{
-				return i.color;
-			}
-
-			ENDCG
-		}
-
-//		Pass
-//		{
-//			Name "BASE"
-//			ZWrite On
-//			ZTest LEqual
-//			Blend SrcAlpha OneMinusSrcAlpha
-//			Material
-//			{
-//				Diffuse[_Color]
-//				Ambient[_Color]
-//			}
-//
-//			Lighting On
-//			SetTexture[_MainTex]
-//			{
-//				ConstantColor[_Color]
-//				Combine texture * constant
-//			}
-//		
-//			SetTexture[_MainTex]
-//			{
-//				Combine previous * primary DOUBLE
-//			}
-//		}
+		half4 frag(v2f i) :COLOR
+	{
+		return i.color;
 	}
 
-	SubShader
+		ENDCG
+	}
+
+		//		Pass
+		//		{
+		//			Name "BASE"
+		//			ZWrite On
+		//			ZTest LEqual
+		//			Blend SrcAlpha OneMinusSrcAlpha
+		//			Material
+		//			{
+		//				Diffuse[_Color]
+		//				Ambient[_Color]
+		//			}
+		//
+		//			Lighting On
+		//			SetTexture[_MainTex]
+		//			{
+		//				ConstantColor[_Color]
+		//				Combine texture * constant
+		//			}
+		//		
+		//			SetTexture[_MainTex]
+		//			{
+		//				Combine previous * primary DOUBLE
+		//			}
+		//		}
+	}
+
+		SubShader
 	{
 		Tags{ "Queue" = "Transparent" }
 		Pass
-		{
-			Name "OUTLINE"
-			Tags{ "LightMode" = "Always" }
-			Cull Front
-			ZWrite Off
-			ColorMask RGB
-			// you can choose what kind of blending mode you want for the outline
-			Blend SrcAlpha OneMinusSrcAlpha // Normal
-											//Blend One One // Additive
-											//Blend One OneMinusDstColor // Soft Additive
-											//Blend DstColor Zero // Multiplicative
-											//Blend DstColor SrcColor // 2x Multiplicative
-			CGPROGRAM
-			#pragma vertex vert
-			#pragma exclude_renderers gles xbox360 ps3
-			ENDCG
-			SetTexture[_MainTex]{ combine primary }
-		}
-
-//		Pass
-//		{
-//			Name "BASE"
-//			ZWrite On
-//			ZTest LEqual
-//			Blend SrcAlpha OneMinusSrcAlpha
-//			Material
-//			{
-//				Diffuse[_Color]
-//				Ambient[_Color]
-//			}
-//			Lighting On
-//			SetTexture[_MainTex]
-//			{
-//				ConstantColor[_Color]
-//				Combine texture * constant
-//			}
-//			SetTexture[_MainTex]
-//			{
-//				Combine previous * primary DOUBLE
-//			}
-//		}
+	{
+		Name "OUTLINE"
+		Tags{ "LightMode" = "Always" }
+		Cull Front
+		ZWrite Off
+		ColorMask RGB
+		// you can choose what kind of blending mode you want for the outline
+		Blend SrcAlpha OneMinusSrcAlpha // Normal
+										//Blend One One // Additive
+										//Blend One OneMinusDstColor // Soft Additive
+										//Blend DstColor Zero // Multiplicative
+										//Blend DstColor SrcColor // 2x Multiplicative
+		CGPROGRAM
+#pragma vertex vert
+#pragma exclude_renderers gles xbox360 ps3
+		ENDCG
+		SetTexture[_MainTex]{ combine primary }
 	}
-	Fallback "Diffuse"
+
+		//		Pass
+		//		{
+		//			Name "BASE"
+		//			ZWrite On
+		//			ZTest LEqual
+		//			Blend SrcAlpha OneMinusSrcAlpha
+		//			Material
+		//			{
+		//				Diffuse[_Color]
+		//				Ambient[_Color]
+		//			}
+		//			Lighting On
+		//			SetTexture[_MainTex]
+		//			{
+		//				ConstantColor[_Color]
+		//				Combine texture * constant
+		//			}
+		//			SetTexture[_MainTex]
+		//			{
+		//				Combine previous * primary DOUBLE
+		//			}
+		//		}
+	}
+		Fallback "Diffuse"
 }

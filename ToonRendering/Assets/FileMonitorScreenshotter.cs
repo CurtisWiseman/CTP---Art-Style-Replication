@@ -10,7 +10,7 @@ public class FileMonitorScreenshotter : MonoBehaviour
     [SerializeField] private List<int> effectsEnabled;
     [SerializeField] private List<Dictionary<string, float>> effectParameters;
     //private List<Material> effects;
-    [SerializeField] private Renderer rend;
+    [SerializeField] private Renderer materialHolder;
     private string filePath = "../UnityScreenshots/";
     [SerializeField] private TextAsset geneticOutput;
     XmlDocument geneticOutputXML = new XmlDocument();
@@ -80,16 +80,26 @@ public class FileMonitorScreenshotter : MonoBehaviour
 
     void ApplyInfoToShaders()
     {
-        for (int i = 0; i < effectsEnabled.Count; i++)
-        {
-            rend.sharedMaterials[i].SetInt(Shader.PropertyToID("Enabled"), effectsEnabled[i]);
-            Debug.Log(rend.sharedMaterials[i].shader.name);
+        Object[] renderers = FindObjectsOfType(typeof(Renderer));
 
-            foreach (KeyValuePair<string,float> param in effectParameters[i])
+        for (int i = 0; i < renderers.Length; i++)
+        {
+            Material[] materials = ((Renderer)renderers[i]).materials;
+
+            for (int j = 0; j < materials.Length; j++)
             {
-                rend.sharedMaterials[i].SetFloat(param.Key, param.Value);
-                Debug.Log("Effect " + i + " setting property " + param.Key + " to " + param.Value);
-                Debug.Log(param.Key + ": " + rend.sharedMaterials[i].GetFloat(param.Key));
+                for (int k = 0; k < effectsEnabled.Count; k++)
+                {
+                    if (materials[j].shader.name == materialHolder.materials[k].shader.name)
+                    {
+                        materials[j].SetInt(Shader.PropertyToID("Enabled"), effectsEnabled[k]);
+                        foreach (KeyValuePair<string, float> param in effectParameters[k])
+                        {
+                            materials[j].SetFloat(param.Key, param.Value);
+                            Debug.Log("Effect " + k + " setting property " + param.Key + " to " + param.Value);
+                        }
+                    }
+                }
             }
         }
     }
