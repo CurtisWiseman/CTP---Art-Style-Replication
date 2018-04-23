@@ -2,8 +2,11 @@
 {
 	Properties
 	{
-		_Color("Color", Color) = (1, 1, 1, 1)
-		_Levels("Levels", Range(0,255)) = 2
+		_Color("Color", Color) = (1, 1, 1, 0)
+		_C_ColourRed("ColourRed", Range(0,1)) = 1
+		_C_ColourGreen("ColourGreen", Range(0,1)) = 1
+		_C_ColourBlue("ColourBlue", Range(0,1)) = 1
+		_C_Levels("Levels", Range(0,255)) = 2
 		_MainTex("Albedo (RGB)", 2D) = "white" {}
 	}
 	
@@ -23,7 +26,7 @@
 		half4 LightingCelShadingForward(SurfaceOutput s, half3 lightDir, half atten)
 		{
 			half NdotL = dot(s.Normal, lightDir);
-			//NdotL = 1 + clamp(floor(NdotL), -1, 0);
+			NdotL = 1 + clamp(floor(NdotL), -1, 0);
 			NdotL = smoothstep(0, 0.025f, NdotL);
 			half4 c;
 			c.rgb = s.Albedo * _LightColor0.rgb * (NdotL * atten * 2);
@@ -49,6 +52,5 @@
 
 		ENDCG
 	}
-	
 	FallBack "Diffuse"
 }

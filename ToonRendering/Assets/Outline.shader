@@ -4,10 +4,10 @@
 	{
 		_Color("Main Color", Color) = (0.5,0.5,0.5,1)
 		_OutlineColor("Outline Color", Color) = (0,0,0,1)
-		_ColourRed("ColourRed", Range(0.0, 1.0)) = 1.0
-		_ColourGreen("_ColourGreen", Range(0.0, 1.0)) = 0.0
-		_ColourBlue("_ColourBlue", Range(0.0, 1.0)) = 0.0
-		_Width("Width", Range(0.0, 10.0)) = 0.03
+		_O_ColourRed("ColourRed", Range(0.0, 1.0)) = 1.0
+		_O_ColourGreen("ColourGreen", Range(0.0, 1.0)) = 0.0
+		_O_ColourBlue("ColourBlue", Range(0.0, 1.0)) = 0.0
+		_O_Width("Width", Range(0.0, 10.0)) = 0.03
 		_MainTex("Base (RGB)", 2D) = "white" { }
 	}
 
@@ -27,10 +27,10 @@
 		float4 color : COLOR;
 	};
 
-	uniform float _Width;
-	uniform float _ColourRed;
-	uniform float _ColourGreen;
-	uniform float _ColourBlue;
+	uniform float _O_Width;
+	uniform float _O_ColourRed;
+	uniform float _O_ColourGreen;
+	uniform float _O_ColourBlue;
 	uniform float4 _OutlineColor;
 
 	v2f vert(appdata v)
@@ -42,8 +42,9 @@
 		float3 norm = mul((float3x3)UNITY_MATRIX_IT_MV, v.normal);
 		float2 offset = TransformViewToProjection(norm.xy);
 
-		o.pos.xy += offset * o.pos.z * _Width;
-		o.color = _OutlineColor;
+		o.pos.xy += offset * o.pos.z * _O_Width;
+		o.color = float4(_O_ColourRed, _O_ColourGreen, _O_ColourBlue, 1);
+
 		return o;
 	}
 
@@ -83,6 +84,5 @@
 			ENDCG
 		}
 	}
-
 	Fallback "Diffuse"
 }

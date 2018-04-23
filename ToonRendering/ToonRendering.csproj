@@ -13,13 +13,11 @@
     <TargetFrameworkIdentifier>.NETFramework</TargetFrameworkIdentifier>
     <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
     <TargetFrameworkProfile>Unity Subset v3.5</TargetFrameworkProfile>
-    <CompilerResponseFile>
-    </CompilerResponseFile>
+    <CompilerResponseFile></CompilerResponseFile>
     <UnityProjectType>Game:1</UnityProjectType>
     <UnityBuildTarget>StandaloneWindows:5</UnityBuildTarget>
     <UnityVersion>2017.3.1f1</UnityVersion>
-    <RootNamespace>
-    </RootNamespace>
+    <RootNamespace></RootNamespace>
     <LangVersion>4</LangVersion>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
@@ -296,9 +294,8 @@
     <None Include="Assets\BrokenShaders\Shader machine broke.shader" />
     <None Include="Assets\BrokenShaders\UberShaderTest.shader" />
     <None Include="Assets\Cel.shader" />
-    <None Include="Assets\GeneticOutput.xml">
-      <SubType>Designer</SubType>
-    </None>
+    <None Include="Assets\GeneticOutput - CeanCopy (Do Not Use or Delete).xml" />
+    <None Include="Assets\GeneticOutput.xml" />
     <None Include="Assets\Hatching.shader" />
     <None Include="Assets\Outline.shader" />
   </ItemGroup>

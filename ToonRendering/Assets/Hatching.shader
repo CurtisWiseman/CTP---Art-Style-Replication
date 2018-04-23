@@ -1,48 +1,104 @@
-﻿Shader "Custom/Hatching" {
-	Properties {
-		_Color ("Color", Color) = (1,1,1,1)
-		_MainTex ("Albedo (RGB)", 2D) = "white" {}
-		_Glossiness ("Smoothness", Range(0,1)) = 0.5
-		_Metallic ("Metallic", Range(0,1)) = 0.0
+﻿// Upgrade NOTE: replaced 'mul(UNITY_MATRIX_MVP,*)' with 'UnityObjectToClipPos(*)'
+
+Shader "Hidden/HatchingComposite"
+{
+	Properties
+	{
+		_MainTex("Texture", 2D) = "white" {}
+		_Hatch0("Hatch 0 (light)", 2D) = "white" {}
+		_Hatch1("Hatch 1", 2D) = "white" {}
+
 	}
-	SubShader {
-		Tags { "RenderType"="Opaque" }
-		LOD 200
 
-		CGPROGRAM
-		// Physically based Standard lighting model, and enable shadows on all light types
-		#pragma surface surf Standard fullforwardshadows
+	SubShader
+	{
+		// No culling or depth
+		Cull Off ZWrite Off ZTest Always
 
-		// Use shader model 3.0 target, to get nicer looking lighting
-		#pragma target 3.0
+		Pass
+		{
+			CGPROGRAM
+			#pragma vertex vert
+			#pragma fragment frag
 
-		sampler2D _MainTex;
+			#include "UnityCG.cginc"
 
-		struct Input {
-			float2 uv_MainTex;
-		};
+			struct appdata
+			{
+				float4 vertex : POSITION;
+				float2 uv : TEXCOORD0;
+			};
 
-		half _Glossiness;
-		half _Metallic;
-		fixed4 _Color;
+			struct v2f
+			{
+				float2 uv : TEXCOORD0;
+				float2 uvFlipY : TEXCOORD1;
+				float4 vertex : SV_POSITION;
+			};
 
-		// Add instancing support for this shader. You need to check 'Enable Instancing' on materials that use the shader.
-		// See https://docs.unity3d.com/Manual/GPUInstancing.html for more information about instancing.
-		// #pragma instancing_options assumeuniformscaling
-		UNITY_INSTANCING_BUFFER_START(Props)
-			// put more per-instance properties here
-		UNITY_INSTANCING_BUFFER_END(Props)
+			v2f vert(appdata v)
+			{
+				v2f o;
+				o.vertex = UnityObjectToClipPos(v.vertex);
+				o.uv = v.uv;
+				o.uvFlipY = o.uv;
+				#if defined(UNITY_UV_STARTS_AT_TOP) && !defined(SHADER_API_MOBILE)
+				o.uvFlipY.y = 1.0 - o.uv.y;
+				#endif
+				return o;
+			}
 
-		void surf (Input IN, inout SurfaceOutputStandard o) {
-			// Albedo comes from a texture tinted by color
-			fixed4 c = tex2D (_MainTex, IN.uv_MainTex) * _Color;
-			o.Albedo = c.rgb;
-			// Metallic and smoothness come from slider variables
-			o.Metallic = _Metallic;
-			o.Smoothness = _Glossiness;
-			o.Alpha = c.a;
+			sampler2D _Hatch0;
+			sampler2D _Hatch1;
+
+			fixed3 Hatching(float2 _uv, half _intensity)
+			{
+				half3 hatch0 = tex2D(_Hatch0, _uv).rgb;
+				half3 hatch1 = tex2D(_Hatch1, _uv).rgb;
+
+				half3 overbright = max(0, _intensity - 1.0);
+
+				half3 weightsA = saturate((_intensity * 6.0) + half3(-0, -1, -2));
+				half3 weightsB = saturate((_intensity * 6.0) + half3(-3, -4, -5));
+
+				weightsA.xy -= weightsA.yz;
+				weightsA.z -= weightsB.x;
+				weightsB.xy -= weightsB.zy;
+
+				hatch0 = hatch0 * weightsA;
+				hatch1 = hatch1 * weightsB;
+
+				half3 hatching = overbright + hatch0.r +
+					hatch0.g + hatch0.b +
+					hatch1.r + hatch1.g +
+					hatch1.b;
+
+				return hatching;
+
+			}
+
+			sampler2D _MainTex;
+			sampler2D _UVBuffer;
+
+			sampler2D _HatchTex1;
+			sampler2D _HatchTex2;
+
+			fixed4 frag(v2f i) : SV_Target
+			{
+				fixed4 col = tex2D(_MainTex, i.uv);
+
+				float4 uv = tex2D(_UVBuffer, i.uvFlipY);
+
+				half intensity = dot(col.rgb, float3(0.2326, 0.7152, 0.0722));
+
+				fixed3 hatch = Hatching(uv.xy * 8, intensity);
+
+				col.rgb = hatch;
+
+				return col;
+			}
+			
+			ENDCG
 		}
-		ENDCG
 	}
-	FallBack "Diffuse"
 }

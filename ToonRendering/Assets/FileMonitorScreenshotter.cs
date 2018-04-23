@@ -5,12 +5,13 @@ using UnityEngine;
 public class FileMonitorScreenshotter : MonoBehaviour
 {
     private long ID_number = -1;
-    
+
+    [SerializeField] private Camera screenCam;
     [SerializeField] private List<int> effectsEnabled;
     [SerializeField] private List<Dictionary<string, float>> effectParameters;
     //private List<Material> effects;
     [SerializeField] private Renderer rend;
-    private string filePath = "C:/Users/can0b/Desktop/Uni Work/CTP_Art_Style_Replication/UnityScreenshots/";
+    private string filePath = "../UnityScreenshots/";
     [SerializeField] private TextAsset geneticOutput;
     XmlDocument geneticOutputXML = new XmlDocument();
 
@@ -20,18 +21,18 @@ public class FileMonitorScreenshotter : MonoBehaviour
         //effects = new List<Material>(rend.sharedMaterials);
         ReadFileInfo();
         ApplyInfoToShaders();
-        TakeScreenshot();
+        TakeBetterScreenshot();
     }
 
     // Update is called once per frame
     void Update()
     {
-        if(ReadFileInfo())
+        bool changed = ReadFileInfo();
+        if (changed)
         {
             ApplyInfoToShaders();
-            TakeScreenshot();
+            TakeBetterScreenshot();
         }
-
     }
 
     bool ReadFileInfo()
@@ -44,9 +45,6 @@ public class FileMonitorScreenshotter : MonoBehaviour
         {
             ID_number = temp_ID;
             XmlNodeList shaders = geneticOutputXML.GetElementsByTagName("shader");
-            //Debug.Log("New ID number: " + temp_ID);
-            //Debug.Log("Number of shaders in XML: " + shaders.Count);
-            //Debug.Log("Number of effects in code (before): " + effectsEnabled.Count);
 
             if (effectsEnabled.Count != shaders.Count)
             {
@@ -54,13 +52,11 @@ public class FileMonitorScreenshotter : MonoBehaviour
                 effectParameters = new List<Dictionary<string, float>>(new Dictionary<string,float>[shaders.Count]);
             }
 
-            //Debug.Log("Number of effects in code (after): " + effectsEnabled.Count);
-            //Debug.Log("Number of parameter sets in code (after): " + effectParameters.Count);
 
             for (int i = 0; i < shaders.Count; i++)
             {
                 XmlNodeList children = shaders[i].ChildNodes;
-                effectsEnabled[i] = int.Parse(children[0].InnerText);
+                effectsEnabled[i] = (int)float.Parse(children[0].InnerText);
                 effectParameters[i] = new Dictionary<string, float>();
 
                 for (int j = 0; j < (children.Count - 1); j++)
@@ -84,9 +80,9 @@ public class FileMonitorScreenshotter : MonoBehaviour
 
             foreach (KeyValuePair<string,float> param in effectParameters[i])
             {
-                rend.sharedMaterials[i].SetFloat("_" + param.Key, param.Value);
-                Debug.Log("Effect " + i + " setting property _" + param.Key + " to " + param.Value);
-                Debug.Log(param.Key + ": " + rend.sharedMaterials[i].GetFloat("_" + param.Key));
+                rend.sharedMaterials[i].SetFloat(param.Key, param.Value);
+                Debug.Log("Effect " + i + " setting property " + param.Key + " to " + param.Value);
+                Debug.Log(param.Key + ": " + rend.sharedMaterials[i].GetFloat(param.Key));
             }
         }
     }
@@ -94,6 +90,25 @@ public class FileMonitorScreenshotter : MonoBehaviour
     void TakeScreenshot()
     {
         ScreenCapture.CaptureScreenshot(filePath + ID_number.ToString() + ".png");
+        Debug.Log("Saved screenshot: " + ID_number.ToString() + ".png");
+    }
+
+    void TakeBetterScreenshot()
+    {
+        int resWidth = 650;
+        int resHeight = 450;
+        RenderTexture rt = new RenderTexture(resWidth, resHeight, 24);
+        screenCam.targetTexture = rt;
+        Texture2D screenShot = new Texture2D(resWidth, resHeight, TextureFormat.RGB24, false);
+        screenCam.Render();
+        RenderTexture.active = rt;
+        screenShot.ReadPixels(new Rect(0, 0, resWidth, resHeight), 0, 0);
+        screenCam.targetTexture = null;
+        RenderTexture.active = null; // JC: added to avoid errors
+        Destroy(rt);
+        byte[] bytes = screenShot.EncodeToPNG();
+        string filename = filePath + ID_number.ToString() + ".png";
+        System.IO.File.WriteAllBytes(filename, bytes);
         Debug.Log("Saved screenshot: " + ID_number.ToString() + ".png");
     }
 }
