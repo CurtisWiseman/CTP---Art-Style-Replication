@@ -5,3 +5,5 @@ http://kylehalladay.com/blog/tutorial/2017/02/21/Pencil-Sketch-Effect.html
 http://wiki.unity3d.com/index.php/Silhouette-Outlined_Diffuse
 
 https://www.gamasutra.com/blogs/DavidLeon/20150702/247602/NextGen_Cel_Shading_in_Unity_5.php
+
+https://dl.acm.org/citation.cfm?id=882262.882355

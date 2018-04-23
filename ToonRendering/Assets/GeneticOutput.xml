@@ -1,11 +1,11 @@
 <genetic>
-  <IDNumber>19</IDNumber>
+  <IDNumber>4</IDNumber>
   <shader>
-    <_Outline>0.6074591337590809</_Outline>
-    <_O_Width>0.7966796033721547</_O_Width>
-    <_O_ColourRed>0.23721907716511992</_O_ColourRed>
-    <_O_ColourGreen>0.8099843253270131</_O_ColourGreen>
-    <_O_ColourBlue>0.24504100690021702</_O_ColourBlue>
+    <_Outline>0.9074591337590809</_Outline>
+    <_O_Width>0.166796033721547</_O_Width>
+    <_O_ColourRed>0.03721907716511992</_O_ColourRed>
+    <_O_ColourGreen>0.0099843253270131</_O_ColourGreen>
+    <_O_ColourBlue>0.94504100690021702</_O_ColourBlue>
   </shader>
   <shader>
     <_Cel>0.16169158335121603</_Cel>

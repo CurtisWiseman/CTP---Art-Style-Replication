@@ -14,6 +14,7 @@ public class FileMonitorScreenshotter : MonoBehaviour
     private string filePath = "../UnityScreenshots/";
     [SerializeField] private TextAsset geneticOutput;
     XmlDocument geneticOutputXML = new XmlDocument();
+    private bool inProgress = false;
 
 	// Use this for initialization
 	void Start ()
@@ -27,12 +28,18 @@ public class FileMonitorScreenshotter : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        bool changed = ReadFileInfo();
-        if (changed)
+        if(!inProgress)
         {
-            ApplyInfoToShaders();
-            TakeBetterScreenshot();
+            inProgress = true;
+            bool changed = ReadFileInfo();
+            if (changed)
+            {
+                ApplyInfoToShaders();
+                TakeBetterScreenshot();
+            }
+            inProgress = false;
         }
+
     }
 
     bool ReadFileInfo()
