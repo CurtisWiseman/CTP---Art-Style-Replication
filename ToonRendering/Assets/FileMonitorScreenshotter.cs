@@ -4,7 +4,7 @@ using UnityEngine;
 
 public class FileMonitorScreenshotter : MonoBehaviour
 {
-    private long ID_number = -1;
+    [SerializeField] private long ID_number = -1;
 
     [SerializeField] private Camera screenCam;
     [SerializeField] private List<int> effectsEnabled;

@@ -1,3 +1,7 @@
+import ctypes
+kernel32 = ctypes.WinDLL('kernel32', use_last_error=True)
+kernel32.SetConsoleTitleW("Art Style Replicator")
+
 import tensorflow as tf
 import numpy as np
 import datetime
@@ -12,8 +16,43 @@ import operator
 import random
 import xml.etree.ElementTree as ET
 from keras.preprocessing.image import ImageDataGenerator
+from win32 import win32gui
+import re
 
 #mnist = input_data.read_data_sets("MNIST_data/", one_hot=False)
+
+class WindowMgr:
+	"""Encapsulates some calls to the winapi for window management"""
+
+	def __init__ (self):
+		"""Constructor"""
+		self._handle = None
+
+	def find_window(self, class_name, window_name=None):
+		"""find a window by its class_name"""
+		self._handle = win32gui.FindWindow(class_name, window_name)
+
+	def find_window_wildcard(self, wildcard):
+		"""find a window whose title matches the wildcard regex"""
+		self._handle = None
+		win32gui.EnumWindows(self._window_enum_callback, wildcard)
+
+	def set_foreground(self):
+		"""put the window in the foreground"""
+		win32gui.SetForegroundWindow(self._handle)
+
+	def set_python_window():
+		"""Gets this python window and sets it to the foreground."""
+		find_window_wildcard(".*Art Style Replicator*.")
+		set_foreground()
+
+	def set_unity_window():
+		"""Gets the unity window and sets it to the foreground."""
+		find_window_wildcard(".*Unity*.")
+		set_foreground()
+
+	def window_callback(hwnd, cookie):
+		return None
 
 train_data_width = 650
 train_data_height = 450
@@ -22,12 +61,21 @@ vidimg = "../../TrainingImages/"
 train_datagen = ImageDataGenerator()
 train_data = train_datagen.flow_from_directory(
 	vidimg,
-	target_size=(train_data_width, train_data_height),
+	target_size=(train_data_height, train_data_width),
 	batch_size=train_data_batch_size,
 	class_mode=None)
 genimg = "../../UnityScreenshots/"
 XMLPath = "../../ToonRendering/Assets/GeneticOutput.xml"
 Max_ID_Number = -1
+
+# The data structure used as a z-vector
+
+Individual = collections.OrderedDict({
+	'idnumber' : -1,
+	'gene' : collections.OrderedDict({}),
+	'image' : tf.placeholder(dtype=tf.float32, shape=[1,train_data_height, train_data_width,3]),
+	'fitness' : 0.0
+	})
 
 # Leaky function to account for slight innacuracies
 def lrelu(x, leak=0.2, name="lrelu"):
@@ -103,32 +151,6 @@ def discriminator(bottom, reuse=False):
 	print("Discriminated")
 	return d_out
 
-# The data structure used as a z-vector
-
-geneStruct = collections.OrderedDict({
-	#'_Outline': 1.0,
-	#'_O_Width' : 1.0,
-	#'_O_ColourRed' : 0.0,
-	#'_O_ColourGreen' : 0.0,
-	#'_O_ColourBlue' : 0.0,
-
-	#'_Cel' : 1.0,
-	#'_C_Levels' : 2.0,
-
-	#'_Hatching' : 1.0,
-	#'_H_Intensity' : 1.0,
-	#'_H_ColourRed' : 0.0,
-	#'_H_ColourGreen' : 0.0,
-	#'_H_ColourBlue' : 0.0,
-	})
-
-Individual = collections.OrderedDict({
-	'idnumber' : -1,
-	'gene' : dict(geneStruct),
-	'image' : tf.placeholder(dtype=tf.float32, shape=[1,650,450,3]),
-	'fitness' : 0.0
-	})
-
 #Genetirator algoritwork
 def genetic(z):
 
@@ -149,20 +171,22 @@ def genetic(z):
 	# Selection
 	def selectFromPopulation(populationSorted, best_sample, lucky_few):
 		
-		nextGeneration = []
+		nextGen = []
 		for i in range(best_sample):
-			nextGeneration.append(populationSorted[i])
+			nextGen.append(populationSorted[i])
 		for i in range(lucky_few):
-			nextGeneration.append(random.choice(populationSorted))
-		random.shuffle(nextGeneration)
-		return nextGeneration
+			nextGen.append(random.choice(populationSorted))
+		random.shuffle(nextGen)
+		return nextGen
 
 	# Breeding
 	def createChild(individual1, individual2):
 		child = dict(Individual)
 		global Max_ID_Number
 		Max_ID_Number += 1
-		child['idnumber'] = Max_ID_Number
+		child['idnumber'] = int(Max_ID_Number)
+
+		child['gene'] = collections.OrderedDict({})
 
 		global XMLPath
 		tree = ET.parse(XMLPath)
@@ -185,6 +209,7 @@ def genetic(z):
 		return child
 
 	def createChildren(breeders, number_of_child):
+		print("Creadted children")
 		nextPopulation = []
 		for i in range(int(len(breeders)/2)):
 			for j in range(number_of_child):
@@ -208,9 +233,9 @@ def genetic(z):
 		 populationSorted = computePerfPopulation(firstGeneration)
 		 nextBreeders = selectFromPopulation(populationSorted, best_sample, lucky_few)
 		 nextPopulation = createChildren(nextBreeders, number_of_child)
-		 nextGeneration = mutatePopulation(nextPopulation, chance_of_mutation)
+		 nextGen = mutatePopulation(nextPopulation, chance_of_mutation)
 		 print("Made next generation")
-		 return nextPopulation
+		 return nextGen
 
 	# Evolving through a set number of generations
 	def multipleGeneration(number_of_generation, best_sample, lucky_few, number_of_child, chance_of_mutation):
@@ -223,41 +248,39 @@ def genetic(z):
 	# Evolving through an infinite number of generations until overall fitness is high enough
 	def multipleGenerationFromFitness(best_sample, lucky_few, number_of_child, chance_of_mutation):
 		c_fitness = 0.0
+		c_fitness = c_fitness - 100000
 		i = 0
 		historic = []
-		historic.append(generateZVector(z_size))
+		historic.append(z)
 
 		while c_fitness < -10.0*z_size:
 			historic.append(nextGeneration(historic[i], best_sample, lucky_few, number_of_child, chance_of_mutation))
 			this_generation = historic[i]
 			c_fitness = 0.0
 			for j in range (z_size):
-				c_fitness += checkFitness(this_generation[j])
+				c_fitness += float(this_generation[j]['fitness'])
 			i += 1
-			print("Overall fitness: " + c_fitness)
-		print("Multigen from fitness passed: " + c_fitness)
+			print("Overall fitness: " + str(c_fitness))
+		number_of_multigen = i+1
+		print("Multigen from fitness passed: " + str(c_fitness))
 		return historic
 
-	# Retrieve overall best individual(s)
-	def getBestIndividualFromPopulation (population):
-		return computePerfPopulation(population)[0]
 
 	def getListBestIndividualFromHistorique (historic):
-		bestIndividuals = []
-		for population in historic:
-			bestIndividuals.append(getBestIndividualFromPopulation(population))
-		return bestIndividuals
+		return computePerfPopulation(historic[len(historic)-1])
 
 	# Print result
 	def printSimpleResult(historic, number_of_generation): #bestSolution in historic. Caution not the last
-		result = getListBestIndividualFromHistorique(historic)[number_of_generation-1]
-		print ("Best solution has fitness: " + str(result[0]))
+		print ("Number of generations: " + str(number_of_generation))
+		result = getListBestIndividualFromHistorique(historic)
+		print ("Best solution has fitness: " + str(result[0]['fitness']))
 
 	# Variables
-	best_sample = 4 # How many of the best will get chosen
-	lucky_few = 4 # How many random choices also get chosen
-	number_of_child = 2 # How many children does each individual have ( z_size / ((best_sample + lucky_few) / 2) ) for a stable population
+	best_sample = 2 # How many of the best will get chosen
+	lucky_few = 2 # How many random choices also get chosen
+	number_of_child = 4 # How many children does each individual have ( z_size / ((best_sample + lucky_few) / 2) ) for a stable population
 	number_of_generation = 50 # How many cycles to go through
+	number_of_multigen = 0 #How many cycles has multigen gone through
 	chance_of_mutation = 5 # How likely mutation will occur
 
 	#################################################################################
@@ -268,18 +291,34 @@ def genetic(z):
 
 	if ((best_sample + lucky_few) / 2 * number_of_child != z_size):
 		print ("Population size not stable")
-		g_out=0
+
 	else:
 		historic = multipleGenerationFromFitness(best_sample, lucky_few, number_of_child, chance_of_mutation)
-		printSimpleResult(historic, number_of_generation)
-		g_out = getListBestIndividualFromHistorique(historic)[0]
+		printSimpleResult(historic, number_of_multigen)
+		number_of_multigen = 0
 
-	print("Geneticised")
+		global train_data_width
+		global train_data_height
 
-	return g_out
+		best_list = getListBestIndividualFromHistorique(historic)
+
+		#g_out = tf.placeholder(dtype=tf.float32, shape=[0, train_data_height, train_data_width, 3], name = "g_out")
+		g_out = best_list[0]['image']
+
+		r_out = list()
+		f_out = np.array([0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0])
+		f_out = np.reshape(f_out, [8, 1])
+
+		for i in range(0, len(best_list)):
+			#g_out = tf.concat([g_out, individual['image']], 0)
+			r_out.append(best_list[i])
+			f_out[i] = float(best_list[i]['fitness'])
+
+		print("Geneticised")
+
+	return g_out, r_out, f_out
 
 ###################################################################################################################
-
 
 
 ###################################################################################################################
@@ -291,10 +330,10 @@ def generateZValue():
 
 	global Max_ID_Number
 	Max_ID_Number += 1
-	result['idnumber'] = Max_ID_Number
+	result['idnumber'] = int(Max_ID_Number)
 
 	i = 0
-	result['gene'] = dict(geneStruct)
+	result['gene'] = collections.OrderedDict({})
 	global XMLPath
 	tree = ET.parse(XMLPath)
 	root = tree.getroot()
@@ -352,18 +391,50 @@ def generateImage(word):
 
 	print("Waiting for Unity to generate image...")
 
+	#w = WindowMgr()
+	#w.set_unity_window
+
+	#hwnd = WindowMgr
+
+	hwnd = 0
+	window_name = "Unity*."
+
+	if window_name is not None:
+		hwnd = win32gui.FindWindow(None, window_name)
+		if hwnd == 0:
+			def callback(h, extra):
+				if window_name in win32gui.GetWindowText(h):
+					extra.append(h)
+				return True
+			extra = []
+			win32gui.EnumWindows(callback, extra)
+			if extra: hwnd = extra[0]
+		if hwnd == 0:
+			raise WindowsAppNotFoundError("Windows Application <%s> not found!" % window_name)
+
+	win32gui.EnumWindows(WindowMgr.window_callback(hwnd, None), 'Unity*')
+	#hwnd = win32gui.FindWindow(None, "Unity*.")
+	win32gui.SetForegroundWindow(hwnd)
+
 	global genimg
 
 	while True:
 		if os.path.isfile(genimg + str(word['idnumber']) + ".png"):
 			break
 	imageString = tf.read_file(genimg + str(word['idnumber']) + ".png")
+
+	hwnd = win32gui.FindWindow(None, "Art Style Replicator")
+	win32gui.SetForegroundWindow(hwnd)
+
 	imageString = tf.image.decode_png(imageString, dtype=tf.uint16)
 	imageString = tf.image.convert_image_dtype(imageString, tf.float32)
 	############### Convert word['image'] to tensor4 ################
-	word['image'] = tf.reshape(imageString, [1, 650, 450, 3])
+	global train_data_width
+	global train_data_height
+	word['image'] = tf.reshape(imageString, [1, train_data_height, train_data_width, 3])
 
 	print("Retrieved generated image")
+	#w.set_python_window
 
 	return word['image']
 
@@ -381,27 +452,33 @@ def checkFitness(solution):
 ###################################################################################################################
 
 
-#with tf.Session() as sess:
-#		sess.run(tf.global_variables_initializer())
-#		reduced = tf.reduce_mean(solution['fitness'])
-#		evaluated = reduced.eval()
-#		fitnessVal = evaluated[0, 1]
 ###################################################################################################################
 ######################### Connecting things together ##############################################################
 
+tree = ET.parse(XMLPath)
+root = tree.getroot()
+for child in root:
+	if(child.tag == "IDNumber"):
+		child.text = str(-1)
+	for subChild in child:
+		subChild.text = str(0.0)
+
+tree.write(XMLPath)
+
+input("Open and start running Unity project, then press Enter to continue...")
+
 tf.reset_default_graph()
 z_size = 8
-number_of_shader_parameters = 9
 
 # Initializes all the weights of the network
 initializer = tf.truncated_normal_initializer(stddev=0.02)
 
 # Placeholders for network input
-z_in = tf.placeholder(shape=[None,z_size],dtype=tf.float32)			# Random vector
-real_in = tf.placeholder(shape=[None,32,32,1],dtype=tf.float32)		# Real images
+z_in = tf.placeholder(shape=[z_size, None],dtype=tf.float32, name = "z_in")			# Random vector
+real_in = tf.placeholder(shape=[z_size, train_data_height, train_data_width, 3],dtype=tf.float32, name = "real_in")		# Real images
 
-Gz = genetic(z_in)													# Generates images from random z vectors
-Dx = discriminator(real_in)											# Produces probabilities for real images
+Gz, _, _ = genetic(generateZVector(z_size))													# Generates images from random z vectors
+Dx = discriminator(real_in, reuse=tf.AUTO_REUSE)					# Produces probabilities for real images
 Dg = discriminator(Gz,reuse=True)									# Produces probabilities for generator images
 
 # Optimization objective functions
@@ -437,42 +514,20 @@ sample_directory = './figs'					# Directory to save sample images from generator
 model_directory = './models'				# Directory to save trained model to.
 init = tf.global_variables_initializer()
 saver = tf.train.Saver()
+gz_checkpoint = generateZVector(z_size)
 
 with tf.Session() as sess:  
 	sess.run(init)
 	for i in range(iterations):
-		#zs = np.random.uniform(-1.0, 1.0, size=[batch_size, z_size]).astype(np.float32)				# Generate a random z batch
-		zs = generateZVector(z_size)
-		xs , _ = train_data.next																		# Draw a sample batch from dataset.
-		xs = (np.reshape(xs, [batch_size, 28, 28, 1]) - 0.5) * 2.0										# Transform it to be between -1 and 1
-		xs = np.lib.pad(xs, ((0, 0), (2, 2), (2, 2), (0, 0)), 'constant', constant_values=(-1, -1))		# Pad the images so they are 32x32
+		zs, gz_checkpoint, fitness_list = genetic(gz_checkpoint)
 
-		_ , dLoss = sess.run([update_D, d_loss], feed_dict={z_in:zs, real_in:xs})						# Update the discriminator
-		_ , gLoss = sess.run([update_G, g_loss], feed_dict={z_in:zs})									# Update the generator, twice for good measure.
-		_ , gLoss = sess.run([update_G, g_loss], feed_dict={z_in:zs})
+		ys = train_data.next()
+		xs = (np.reshape(ys, [batch_size, train_data_height, train_data_width, 3]) - 0.5) * 2.0			# Transform it to be between -1 and 1
+		xs = np.lib.pad(xs, ((0, 0), (0, 0), (0, 0), (0, 0)), 'constant', constant_values=(-1, -1))		# Pad the images so they are 32x32
 
-		if i % 10 == 0:
-			print ("Gen Loss: " + str(gLoss) + " Disc Loss: " + str(dLoss))
-			#z2 = np.random.uniform(-1.0, 1.0, size=[batch_size, z_size]).astype(np.float32)			# Generate another z batch
-			z2 = generateZVector(z_size)
-			newZ = sess.run(Gz, feed_dict={z_in:z2})													# Use new z to get sample images from generator.
-
-			if not os.path.exists(sample_directory):													# If directory doesn't exist, make it
-				os.makedirs(sample_directory)
-
-			save_images(																				# Save sample generator images for viewing training progress.
-				np.reshape(newZ[0:36], [36, 32, 32]),
-				[6, 6],
-				sample_directory + '/fig' + str(i) + '.png'
-				)
-
-		if i % 1000 == 0 and i != 0:																	# Save checkpoints of the model
-			
-			if not os.path.exists(model_directory):														# If directory doesn't exist, make it
-				os.makedirs(model_directory)
-
-			saver.save(sess, model_directory + '/model-' + str(i) + '.cptk')
-			print("Saved Model")
+		_ , dLoss = sess.run([update_D, d_loss], feed_dict={z_in:fitness_list, real_in:xs})						# Update the discriminator
+		#_ , gLoss = sess.run([update_G, g_loss], feed_dict={z_in:zs})									# Update the generator, twice for good measure.
+		#_ , gLoss = sess.run([update_G, g_loss], feed_dict={z_in:zs})
 
 
 ###################################################################################################################
