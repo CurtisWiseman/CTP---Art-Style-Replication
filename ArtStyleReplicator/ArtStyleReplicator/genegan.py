@@ -56,13 +56,14 @@ class WindowMgr:
 
 train_data_width = 650
 train_data_height = 450
-train_data_batch_size = 8
+z_size = 32
+
 vidimg = "../../TrainingImages/"
 train_datagen = ImageDataGenerator()
 train_data = train_datagen.flow_from_directory(
 	vidimg,
 	target_size=(train_data_height, train_data_width),
-	batch_size=train_data_batch_size,
+	batch_size=z_size,
 	class_mode=None)
 genimg = "../../UnityScreenshots/"
 XMLPath = "../../ToonRendering/Assets/GeneticOutput.xml"
@@ -306,8 +307,8 @@ def genetic(z):
 		g_out = best_list[0]['image']
 
 		r_out = list()
-		f_out = np.array([0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0])
-		f_out = np.reshape(f_out, [8, 1])
+		f_out = np.array(0.0)
+		f_out = np.resize(f_out, [z_size, 1])
 
 		for i in range(0, len(best_list)):
 			#g_out = tf.concat([g_out, individual['image']], 0)
@@ -397,7 +398,7 @@ def generateImage(word):
 	#hwnd = WindowMgr
 
 	hwnd = 0
-	window_name = "Unity*."
+	window_name = "ToonRendering"
 
 	if window_name is not None:
 		hwnd = win32gui.FindWindow(None, window_name)
@@ -412,7 +413,6 @@ def generateImage(word):
 		if hwnd == 0:
 			raise WindowsAppNotFoundError("Windows Application <%s> not found!" % window_name)
 
-	win32gui.EnumWindows(WindowMgr.window_callback(hwnd, None), 'Unity*')
 	#hwnd = win32gui.FindWindow(None, "Unity*.")
 	win32gui.SetForegroundWindow(hwnd)
 
@@ -468,7 +468,6 @@ tree.write(XMLPath)
 input("Open and start running Unity project, then press Enter to continue...")
 
 tf.reset_default_graph()
-z_size = 8
 
 # Initializes all the weights of the network
 initializer = tf.truncated_normal_initializer(stddev=0.02)
@@ -508,7 +507,6 @@ update_G = trainerG.apply_gradients(g_grads)
 ###################################################################################################################
 ####################### Training the network ######################################################################
 
-batch_size = 8								# Size of image batch to apply at each iteration.
 iterations = 10000							# Total number of iterations to use.
 sample_directory = './figs'					# Directory to save sample images from generator in.
 model_directory = './models'				# Directory to save trained model to.
@@ -522,7 +520,7 @@ with tf.Session() as sess:
 		zs, gz_checkpoint, fitness_list = genetic(gz_checkpoint)
 
 		ys = train_data.next()
-		xs = (np.reshape(ys, [batch_size, train_data_height, train_data_width, 3]) - 0.5) * 2.0			# Transform it to be between -1 and 1
+		xs = (np.reshape(ys, [z_size, train_data_height, train_data_width, 3]) - 0.5) * 2.0			# Transform it to be between -1 and 1
 		xs = np.lib.pad(xs, ((0, 0), (0, 0), (0, 0), (0, 0)), 'constant', constant_values=(-1, -1))		# Pad the images so they are 32x32
 
 		_ , dLoss = sess.run([update_D, d_loss], feed_dict={z_in:fitness_list, real_in:xs})						# Update the discriminator
