@@ -1,0 +1,24 @@
+<genetic>
+  <IDNumber>60</IDNumber>
+  <shader>
+    <_Outline>0.5460682698300697</_Outline>
+    <_O_Width>0.7877772308832842</_O_Width>
+    <_O_ColourRed>0.6555577099897021</_O_ColourRed>
+    <_O_ColourGreen>0.17901203122383025</_O_ColourGreen>
+    <_O_ColourBlue>0.28401492520584704</_O_ColourBlue>
+  </shader>
+  <shader>
+    <_Cel>0.05052903735507808</_Cel>
+    <_C_Levels>0.6712102271359358</_C_Levels>
+    <_C_ColourRed>0.32604703051265105</_C_ColourRed>
+    <_C_ColourGreen>0.5011754403532854</_C_ColourGreen>
+    <_C_ColourBlue>0.5516358267653833</_C_ColourBlue>
+  </shader>
+  <shader>
+    <_Hatching>0.04806398614581797</_Hatching>
+    <_H_Intensity>0.3262972767571052</_H_Intensity>
+    <_H_ColourRed>0.48934377754490366</_H_ColourRed>
+    <_H_ColourGreen>0.8460732998048442</_H_ColourGreen>
+    <_H_ColourBlue>0.7693077931379682</_H_ColourBlue>
+  </shader>
+</genetic>

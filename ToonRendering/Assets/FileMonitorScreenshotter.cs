@@ -1,6 +1,7 @@
 ﻿using System.Xml;
 using System.Collections.Generic;
 using UnityEngine;
+using System.IO;
 
 public class FileMonitorScreenshotter : MonoBehaviour
 {
@@ -12,6 +13,7 @@ public class FileMonitorScreenshotter : MonoBehaviour
     //private List<Material> effects;
     [SerializeField] private Renderer materialHolder;
     private string filePath = "../UnityScreenshots/";
+    private string xmlPath = "../ToonRendering/Assets/GeneticOutput.xml";
     [SerializeField] private TextAsset geneticOutput;
     XmlDocument geneticOutputXML = new XmlDocument();
     [SerializeField] private static bool inProgress = false;
@@ -20,9 +22,11 @@ public class FileMonitorScreenshotter : MonoBehaviour
 	void Start ()
     {
         //effects = new List<Material>(rend.sharedMaterials);
-        ReadFileInfo();
-        ApplyInfoToShaders();
-        TakeBetterScreenshot();
+        if(ReadFileInfo())
+        {
+            ApplyInfoToShaders();
+            TakeBetterScreenshot();
+        }
     }
 
     // Update is called once per frame
@@ -43,7 +47,12 @@ public class FileMonitorScreenshotter : MonoBehaviour
 
     bool ReadFileInfo()
     {
-        geneticOutputXML.LoadXml(geneticOutput.text);
+        //geneticOutputXML.LoadXml(geneticOutput.text);
+        StreamReader sReader = new StreamReader(xmlPath);
+        geneticOutputXML.LoadXml(sReader.ReadToEnd());
+        sReader.Close();
+
+
 
         long temp_ID = long.Parse(geneticOutputXML.GetElementsByTagName("IDNumber").Item(0).InnerText);
 
