@@ -1,7 +1,3 @@
-# User-defined
-UnityScreenshots/
-TrainingImages/
-
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]

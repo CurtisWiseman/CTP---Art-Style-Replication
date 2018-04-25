@@ -39,7 +39,7 @@ Individual = collections.OrderedDict({
 	'fitness' : 0.0
 	})
 
-# Leaky function to account for slight innacuracies
+# Leaky function to account for slight inaccuracies
 def lrelu(x, leak=0.2, name="lrelu"):
 	with tf.variable_scope(name):
 		f1 = 0.5 * (1 + leak)
@@ -310,7 +310,7 @@ def saveToXML(word):
 
 	print("Saved to XML")
 
-# Outsourcing image randering to Unity
+# Outsourcing image rendering to Unity
 def generateImage(word):
 	saveToXML(word)
 
@@ -392,8 +392,8 @@ for child in root:
 
 tree.write(XMLPath)
 
-# Ensure Unity is open so the program can auomate itself
-input("Open and start running Unity project, then press Enter to continue...")
+# Ensure Unity is open so the program can automate itself
+input("Open and start running 'ToonRendering.exe', then press Enter to continue...")
 
 tf.reset_default_graph()
 
